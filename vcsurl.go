@@ -11,6 +11,7 @@ import (
 type RepoHost string
 
 const (
+	Gitlab     RepoHost = "gitlab.com"
 	GitHub     RepoHost = "github.com"
 	Bitbucket  RepoHost = "bitbucket.org"
 	GoogleCode RepoHost = "code.google.com"
@@ -77,6 +78,8 @@ func Parse(spec string) (info *RepoInfo, err error) {
 
 		if info.RepoHost == GitHub || parsedURL.Scheme == "git" {
 			info.VCS = Git
+		} else if info.RepoHost == Gitlab || parsedURL.Scheme == "git" {
+			info.VCS = Git
 		} else if info.RepoHost == GoogleCode && parsedURL.Scheme == "https" {
 			info.VCS = Mercurial
 		} else if info.RepoHost == Bitbucket && (parsedURL.Scheme == "https" || parsedURL.Scheme == "http") {
@@ -97,6 +100,15 @@ func Parse(spec string) (info *RepoInfo, err error) {
 				info.Name = parts[2]
 				info.FullName = parts[1] + "/" + parts[2]
 				info.CloneURL = "git://github.com/" + info.FullName + ".git"
+			}
+		case Gitlab:
+			parts := strings.Split(path, "/")
+			if len(parts) >= 3 {
+				info.Username = parts[1]
+				parts[2] = removeDotGit.ReplaceAllLiteralString(parts[2], "")
+				info.Name = parts[2]
+				info.FullName = parts[1] + "/" + parts[2]
+				info.CloneURL = "git://gitlab.com/" + info.FullName + ".git"
 			}
 		case GoogleCode:
 			parts := strings.Split(path, "/")
